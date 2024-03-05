@@ -1,5 +1,15 @@
 {
-  "devDependencies": {
+  "name": "bookmarks2urlfiles",
+  "version": "0.0.1",
+  "description": "```markdown\r # Bookmark2UrlFile",
+  "main": "main.js",
+  "dependencies": {
     "cheerio": "^1.0.0-rc.12"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
 }

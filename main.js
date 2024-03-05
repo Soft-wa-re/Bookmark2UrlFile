@@ -11,39 +11,39 @@ fs.readFile(htmlFilePath, 'utf8', async (err, html) => {
         return;
     }
 
-    // Parse the HTML using Cheerio
     const $ = cheerio.load(html);
-
-    // Find all top-level <h3> tags
-    $('h3').each(async (index, h3Element) => {
-        const h3Text = $(h3Element).text().trim();
-        const h3DirPath = path.join(__dirname, 'output', h3Text);
-        recursiveCall2($, h3Element, h3DirPath);
-    });
+    let h3Element = $('h3').first()
+    const h3Text = $(h3Element).text().trim();
+    console.log(h3Text)
+    const h3DirPath = path.join(__dirname, 'output', h3Text);
+    recursiveCall($, $(h3Element).next('dl'), h3DirPath);
 });
 
-function recursiveCall2($, h3Element, h3DirPath) {
-    fs.mkdirSync(h3DirPath, { recursive: true }); // Create directory for the top-level <h3> tag
-
-    let dl = $(h3Element).next('dl');
+function recursiveCall($, dl, currentPath) {
+    fs.mkdirSync(currentPath, { recursive: true }); // Create directory for the current path
 
     dl.find('dt').each(async (index, dtElement) => {
         const dtText = $(dtElement).text().trim();
         const dtHref = $(dtElement).find('a').attr('href');
 
         if (dtHref) {
-            writeNewFile(dtHref, dtText, h3DirPath);
+            writeNewFile(dtHref, dtText, currentPath);
+        }
+
+        const nestedDL = $(dtElement).next('dl');
+        if (nestedDL.length) {
+            recursiveCall($, nestedDL, path.join(currentPath, dtText));
         }
     });
 }
 
-function writeNewFile(dtHref, dtText, h3DirPath) {
+function writeNewFile(dtHref, dtText, currentPath) {
     try {
         const content = '[InternetShortcut]\nURL=' + dtHref;
 
         // Write the contents to a new file
         const fileName = `${dtText}.url`;
-        const filePath = path.join(h3DirPath, fileName);
+        const filePath = path.join(currentPath, fileName);
         fs.writeFile(filePath, content, (err) => {
             if (err) {
                 console.error(`Error writing file ${fileName}:`, err);
@@ -55,4 +55,3 @@ function writeNewFile(dtHref, dtText, h3DirPath) {
         console.error(`Error fetching URL ${dtHref}:`, error);
     }
 }
-
