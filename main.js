@@ -18,32 +18,41 @@ fs.readFile(htmlFilePath, 'utf8', async (err, html) => {
     $('h3').each(async (index, h3Element) => {
         const h3Text = $(h3Element).text().trim();
         const h3DirPath = path.join(__dirname, 'output', h3Text);
-        fs.mkdirSync(h3DirPath, { recursive: true }); // Create directory for the top-level <h3> tag
-
-        // Find all nested <dt> tags within the <dl> tag following the current <h3> tag
-        $(h3Element).next('dl').find('dt').each(async (index, dtElement) => {
-            const dtText = $(dtElement).text().trim();
-            const dtHref = $(dtElement).find('a').attr('href');
-
-            if (dtHref) {
-                // Get the contents of the URL
-                try {
-                    const content = '[InternetShortcut]\nURL=' + dtHref;
-
-                    // Write the contents to a new file
-                    const fileName = `${dtText}.url`;
-                    const filePath = path.join(h3DirPath, fileName);
-                    fs.writeFile(filePath, content, (err) => {
-                        if (err) {
-                            console.error(`Error writing file ${fileName}:`, err);
-                        } else {
-                            console.log(`File ${fileName} has been created with URL content.`);
-                        }
-                    });
-                } catch (error) {
-                    console.error(`Error fetching URL ${dtHref}:`, error);
-                }
-            }
-        });
+        recursiveCall2($, h3Element, h3DirPath);
     });
 });
+
+function recursiveCall2($, h3Element, h3DirPath) {
+    fs.mkdirSync(h3DirPath, { recursive: true }); // Create directory for the top-level <h3> tag
+
+    let dl = $(h3Element).next('dl');
+
+    dl.find('dt').each(async (index, dtElement) => {
+        const dtText = $(dtElement).text().trim();
+        const dtHref = $(dtElement).find('a').attr('href');
+
+        if (dtHref) {
+            writeNewFile(dtHref, dtText, h3DirPath);
+        }
+    });
+}
+
+function writeNewFile(dtHref, dtText, h3DirPath) {
+    try {
+        const content = '[InternetShortcut]\nURL=' + dtHref;
+
+        // Write the contents to a new file
+        const fileName = `${dtText}.url`;
+        const filePath = path.join(h3DirPath, fileName);
+        fs.writeFile(filePath, content, (err) => {
+            if (err) {
+                console.error(`Error writing file ${fileName}:`, err);
+            } else {
+                console.log(`File ${fileName} has been created with URL content.`);
+            }
+        });
+    } catch (error) {
+        console.error(`Error fetching URL ${dtHref}:`, error);
+    }
+}
+
